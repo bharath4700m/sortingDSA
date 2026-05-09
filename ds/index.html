@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student-Centric DSA Visualizer</title>
+
+<style>
+body{
+    font-family: 'Segoe UI', Arial;
+    text-align:center;
+    background: linear-gradient(135deg,#a8edea,#fed6e3);
+    margin:0;
+    padding:0;
+    color:#222;
+}
+
+h1{
+    margin-top:20px;
+    font-size:32px;
+    color:#2c3e50;
+}
+
+.controls{
+    margin-top:20px;
+}
+
+input,select,button{
+    padding:12px;
+    margin:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:16px;
+}
+
+button{
+    background:#4CAF50;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#43a047;
+}
+
+.array-container{
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    height:420px;
+    margin-top:40px;
+}
+
+.bar{
+    width:70px;
+    margin:12px;
+    background:#42a5f5;
+    border-radius:12px;
+    font-weight:bold;
+    font-size:18px;
+    text-align:center;
+    transition:all 0.7s ease;
+    position:relative;
+    box-shadow:0 8px 18px rgba(0,0,0,0.2);
+}
+
+.bar span{
+    position:absolute;
+    bottom:-30px;
+    width:100%;
+}
+
+#explanationBox{
+    margin:40px auto;
+    width:80%;
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    font-size:24px;
+    font-weight:bold;
+    min-height:90px;
+    color:#2c3e50;
+}
+
+#stats{
+    font-size:20px;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📚 Student Learning DSA Visualizer</h1>
+
+<div class="controls">
+<input type="text" id="arrayInput" placeholder="Enter numbers (5,3,8,1)">
+<input type="number" id="searchKey" placeholder="Search key" style="display:none;">
+
+<select id="algorithm">
+    <option>Bubble Sort</option>
+    <option>Selection Sort</option>
+    <option>Insertion Sort</option>
+    <option>Linear Search</option>
+    <option>Binary Search</option>
+</select>
+
+<br>
+
+<label>Speed (Slow for Learning):</label>
+<input type="range" min="1000" max="3000" value="2000" id="speed">
+
+<button onclick="start()">Start Learning</button>
+</div>
+
+<div class="array-container" id="arrayContainer"></div>
+
+<div id="explanationBox">
+Welcome! Enter numbers and click Start Learning.
+</div>
+
+<div id="stats"></div>
+
+<script>
+let delay=2000;
+let comparisons=0;
+let swaps=0;
+
+function sleep(ms){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function createBars(arr){
+    const container=document.getElementById("arrayContainer");
+    container.innerHTML="";
+    arr.forEach(val=>{
+        const bar=document.createElement("div");
+        bar.classList.add("bar");
+        bar.style.height=val*5+"px";
+        bar.innerHTML=`<span>${val}</span>`;
+        container.appendChild(bar);
+    });
+}
+
+async function swapAnimation(i,j){
+    let bars=document.querySelectorAll(".bar");
+    let container=document.getElementById("arrayContainer");
+
+    bars[i].style.transform="translateY(-80px)";
+    bars[j].style.transform="translateY(-80px)";
+    await sleep(delay/2);
+
+    container.insertBefore(bars[j],bars[i]);
+    await sleep(delay/2);
+
+    bars=document.querySelectorAll(".bar");
+    bars[i].style.transform="translateY(0px)";
+    bars[j].style.transform="translateY(0px)";
+    await sleep(delay/2);
+}
+
+document.getElementById("algorithm").addEventListener("change",function(){
+    let algo=this.value;
+    let searchBox=document.getElementById("searchKey");
+    searchBox.style.display = algo.includes("Search") ? "inline-block" : "none";
+});
+
+async function bubbleSort(arr){
+    let box=document.getElementById("explanationBox");
+
+    for(let i=0;i<arr.length;i++){
+        box.innerText=`Pass ${i+1}: Largest element moves to end`;
+
+        for(let j=0;j<arr.length-i-1;j++){
+            comparisons++;
+            let bars=document.querySelectorAll(".bar");
+
+            bars[j].style.background="orange";
+            bars[j+1].style.background="orange";
+            box.innerText=`Comparing ${arr[j]} and ${arr[j+1]}`;
+            await sleep(delay);
+
+            if(arr[j]>arr[j+1]){
+                swaps++;
+                box.innerText=`Swapping because ${arr[j]} > ${arr[j+1]}`;
+                bars[j].style.background="red";
+                bars[j+1].style.background="red";
+                [arr[j],arr[j+1]]=[arr[j+1],arr[j]];
+                await swapAnimation(j,j+1);
+            }
+
+            bars=document.querySelectorAll(".bar");
+            bars[j].style.background="#42a5f5";
+            bars[j+1].style.background="#42a5f5";
+        }
+
+        let bars=document.querySelectorAll(".bar");
+        bars[arr.length-i-1].style.background="green";
+    }
+
+    box.innerText="🎉 Bubble Sort Completed!";
+}
+
+async function selectionSort(arr){
+    let box=document.getElementById("explanationBox");
+
+    for(let i=0;i<arr.length;i++){
+        let min=i;
+        box.innerText=`Selecting minimum for position ${i}`;
+
+        for(let j=i+1;j<arr.length;j++){
+            comparisons++;
+            let bars=document.querySelectorAll(".bar");
+            bars[j].style.background="orange";
+            await sleep(delay);
+
+            if(arr[j]<arr[min]){
+                min=j;
+            }
+
+            bars[j].style.background="#42a5f5";
+        }
+
+        if(min!=i){
+            swaps++;
+            [arr[i],arr[min]]=[arr[min],arr[i]];
+            await swapAnimation(i,min);
+        }
+
+        let bars=document.querySelectorAll(".bar");
+        bars[i].style.background="green";
+    }
+
+    box.innerText="🎉 Selection Sort Completed!";
+}
+
+async function insertionSort(arr){
+    let box=document.getElementById("explanationBox");
+
+    for(let i=1;i<arr.length;i++){
+        let key=arr[i];
+        let j=i-1;
+
+        box.innerText=`Inserting ${key} into sorted portion`;
+        await sleep(delay);
+
+        while(j>=0 && arr[j]>key){
+            comparisons++;
+            arr[j+1]=arr[j];
+            await swapAnimation(j,j+1);
+            j--;
+        }
+        arr[j+1]=key;
+    }
+
+    let bars=document.querySelectorAll(".bar");
+    bars.forEach(bar=>bar.style.background="green");
+    box.innerText="🎉 Insertion Sort Completed!";
+}
+
+async function linearSearch(arr,key){
+    let box=document.getElementById("explanationBox");
+
+    for(let i=0;i<arr.length;i++){
+        comparisons++;
+        let bars=document.querySelectorAll(".bar");
+        bars[i].style.background="orange";
+        box.innerText=`Checking index ${i}`;
+        await sleep(delay);
+
+        if(arr[i]==key){
+            bars[i].style.background="green";
+            box.innerText=`✅ Found at index ${i}`;
+            return;
+        }else{
+            bars[i].style.background="red";
+        }
+    }
+
+    box.innerText="❌ Element Not Found";
+}
+
+async function binarySearch(arr,key){
+    arr.sort((a,b)=>a-b);
+    createBars(arr);
+
+    let box=document.getElementById("explanationBox");
+    let low=0,high=arr.length-1;
+
+    while(low<=high){
+        let mid=Math.floor((low+high)/2);
+        comparisons++;
+
+        let bars=document.querySelectorAll(".bar");
+        bars[mid].style.background="orange";
+        box.innerText=`Middle index ${mid}`;
+        await sleep(delay);
+
+        if(arr[mid]==key){
+            bars[mid].style.background="green";
+            box.innerText="✅ Found!";
+            return;
+        }else if(arr[mid]<key){
+            low=mid+1;
+        }else{
+            high=mid-1;
+        }
+
+        bars[mid].style.background="red";
+    }
+
+    box.innerText="❌ Element Not Found";
+}
+
+async function start(){
+    delay=document.getElementById("speed").value;
+    comparisons=0;
+    swaps=0;
+
+    let input=document.getElementById("arrayInput").value;
+    let arr=input.split(",").map(Number);
+    let algo=document.getElementById("algorithm").value;
+    let key=document.getElementById("searchKey").value;
+
+    createBars(arr);
+
+    if(algo==="Bubble Sort") await bubbleSort(arr);
+    else if(algo==="Selection Sort") await selectionSort(arr);
+    else if(algo==="Insertion Sort") await insertionSort(arr);
+    else if(algo==="Linear Search") await linearSearch(arr,key);
+    else if(algo==="Binary Search") await binarySearch(arr,key);
+
+    document.getElementById("stats").innerText=
+        `Comparisons: ${comparisons} | Swaps: ${swaps}`;
+}
+</script>
+
+</body>
+</html>
